@@ -38,5 +38,13 @@ button?.addEventListener('click', () => {
   }).catch(err => {
     console.log('Audio playback was blocked or failed:', err);
   });
-});
+}) {
+  animation: koanPulse 3s ease-in-out infinite;
+}
+
+@keyframes koanPulse {
+  0% { box-shadow: 0 0 4px #4da6ff44; }
+  50% { box-shadow: 0 0 12px #4da6ff88; }
+  100% { box-shadow: 0 0 4px #4da6ff44; }
+}
 </script></body></html>
