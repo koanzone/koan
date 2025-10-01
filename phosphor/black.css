@@ -1,0 +1,10 @@
+body {
+    background-color: black;
+    color: magenta;
+    max-width: 100%;
+    font-family: "JetBrains Mono", monospace;
+    font-size: small;
+}
+a {
+  color: #FFFF00; 
+}

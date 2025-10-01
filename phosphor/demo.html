@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>PHOSPHOR — Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="black.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="index.html">PHOSPHOR</a></h1>
+    <nav>
+      <a href="info.html">Info</a>
+      <a href="demo.html" aria-current="page">Demo</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>60-Second Demo</h2>
+
+    <!-- Option A: self-hosted MP4 (replace demo.mp4) -->
+    <video controls playsinline preload="metadata" style="max-width:100%;height:auto;">
+      <source src="demo.mp4" type="video/mp4" />
+      Your browser doesn’t support embedded video.
+    </video>
+    <p><a href="demo.mp4" download>Download the video</a></p>
+
+    <!-- Option B: YouTube/Vimeo embed (replace the src and keep the MP4 as fallback if you want) -->
+    <!--
+    <div class="video-16x9">
+      <iframe
+        src="https://www.youtube.com/embed/REPLACE_VIDEO_ID"
+        title="Phosphor Demo"
+        frameborder="0"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>
+    -->
+
+    <p class="muted">Setup &lt; 15 min. Plugs into your DMX. Four coherent scenes: Ambient, Build, Drop, Outro.</p>
+  </main>
+
+  <footer>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="info.html">Info</a>
+    </nav>
+  </footer>
+
+  <style>
+    /* If your black.css doesn’t already handle responsive iframes */
+    .video-16x9 { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+    .video-16x9 iframe { position: absolute; top:0; left:0; width:100%; height:100%; }
+  </style>
+</body>
+</html>
