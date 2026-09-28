@@ -11,13 +11,11 @@ export default function Home() {
  const [busy, setBusy] = useState(false), [ready, setReady] = useState(false);
  const [error, setError] = useState(''), [notice, setNotice] = useState('');
  const [retry, setRetry] = useState<Message[] | null>(null);
- const [mode, setMode] = useState('connecting');
  const [reduced, setReduced] = useState(false), [missing, setMissing] = useState(false);
  const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null);
  const inFlight = useRef(false), reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
  useEffect(() => {
   const timer = setTimeout(() => {setMessages([opening]); setReady(true);}, 900);
-  fetch('/api/health').then(r => {if (!r.ok) throw Error(); return r.json();}).then(d => setMode(d.backend)).catch(() => setMode('offline'));
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const motion = () => setReduced(media.matches); motion(); media.addEventListener('change', motion);
   const viewport = window.visualViewport;
@@ -63,28 +61,27 @@ export default function Home() {
  }
  return <main className="app">
   <section className="conversation" aria-label="Conversation">
-   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span><span className="session">{mode === 'demo' ? 'DEMO · SCRIPTED REPLIES' : mode === 'mlx' ? 'LOCAL · THIS SESSION' : mode === 'offline' ? 'BACKEND OFFLINE' : 'CONNECTING'}</span></header>
+   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span></header>
    <div className="transcript" ref={scroll} role="log" aria-label="Messages" aria-live="off" aria-busy={busy}>
     <div className="message-column">
-     {messages.map((message,i) => message.content && <article key={i} className={`message ${message.role}`}><span className="speaker">{message.role === 'user' ? 'YOU' : 'GUIDE'}</span><p>{message.content}</p></article>)}
+     {messages.map((message,i) => message.content && <article key={i} className={`message ${message.role}`}><span className="speaker">{message.role === 'user' ? 'YOU' : 'ECHO'}</span><p>{message.content}</p></article>)}
     </div>
    </div>
    <div className="composer-wrap">
     {error && <div role="alert" className="error">{error} {retry && <><button className="text-button" onClick={() => send(retry)}>Retry</button><button className="text-button" onClick={() => {setMessages(retry.slice(0,-1)); setDraft(retry.at(-1)?.content || ""); setRetry(null); setError("");}}>Edit reply</button></>}</div>}
     {notice && <p className="notice">{notice}</p>}
     <form onSubmit={e => {e.preventDefault(); const text=draft.trim(); if (!text || busy || !ready) return; setDraft(''); send([...messages.filter(m => m.content), {role:'user',content:text}]);}}>
-     <textarea aria-label="Your reply" placeholder={ready ? 'Begin where you are…' : 'A moment…'} value={draft} rows={1} maxLength={12000} disabled={busy || !ready || !!retry} onChange={e => setDraft(e.target.value)} onFocus={() => dispatch({type:'focus'})} onBlur={() => dispatch({type:'blur'})} onKeyDown={e => {if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {e.preventDefault();e.currentTarget.form?.requestSubmit();}}}/>
+     <textarea aria-label="Your reply" placeholder={ready ? 'Open your mind...' : 'A moment…'} value={draft} rows={1} maxLength={12000} disabled={busy || !ready || !!retry} onChange={e => setDraft(e.target.value)} onFocus={() => dispatch({type:'focus'})} onBlur={() => dispatch({type:'blur'})} onKeyDown={e => {if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {e.preventDefault();e.currentTarget.form?.requestSubmit();}}}/>
      {busy ? <button type="button" onClick={() => controller.current?.abort()} aria-label="Stop response">■</button> : <button type="submit" disabled={!draft.trim() || !ready || !!retry} aria-label="Send reply">↑</button>}
     </form>
-    <div className="footnote"><span>A LITTLE SPACE TO LOOK CLOSER</span><span>SESSION ONLY</span></div>
    </div>
   </section>
-  <section className={`stage ${state}`} aria-label={`Guide is ${state}`}>
+  <section className={`stage ${state}`} aria-label={`Echo is ${state}`}>
    <div className="stage-line"/><div className="sprite-frame">
-    {missing ? <div className="placeholder">◯<small>Guide · {state}</small></div> : <img src={reduced ? '/guide/still.png' : `/guide/${state}.gif`} alt="Android contemplative guide in a violet-lit temple" onError={() => setMissing(true)} />}
+    {missing ? <div className="placeholder">◯<small>Echo · {state}</small></div> : <img src={reduced ? '/guide/still.png' : `/guide/${state}.gif`} alt="Android contemplative guide in a violet-lit temple" onError={() => setMissing(true)} />}
    </div>
    <div className="stage-caption"><span className="presence-dot"/>{state === 'attention' ? 'LISTENING' : state === 'idle' ? 'HERE WITH YOU' : state.toUpperCase()}</div>
   </section>
-  <span className="sr-only" role="status">{busy ? 'The guide is considering your reply.' : messages.at(-1)?.role === 'assistant' ? messages.at(-1)?.content : ''}</span>
+  <span className="sr-only" role="status">{busy ? 'Echo is considering your reply.' : messages.at(-1)?.role === 'assistant' ? messages.at(-1)?.content : ''}</span>
  </main>;
 }
