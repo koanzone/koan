@@ -10,3 +10,15 @@ Checked on macOS, September 24, 2026.
 - Physical iOS/Android keyboard behavior, installation, and offline service-worker behavior were not exercised. Manifest, icons, and offline fallback are included; the service worker registers in production only.
 
 Backend tests run with Python 3.12, FastAPI 0.141.1, Uvicorn 0.53.0, and Pydantic 2.13.5. The demo performs no model inference. The separate headless Chrome launcher was unavailable in this sandbox; visual checks used the Codex in-app browser instead.
+
+## Cloudflare preparation — September 28, 2026
+
+- Next.js Cloudflare static export and TypeScript check: passed.
+- Original local Next.js production build: passed.
+- Eight Worker test cases: passed, covering signed Access JWTs, invalid/expired/wrong-audience tokens, missing settings, route/method/origin/content-type/body-size restrictions, server-only credential injection, incremental SSE forwarding, cancellation, redirects, network failures, and busy/health responses.
+- Existing frontend stream/state protocol checks: passed.
+- Wrangler 4.142.0 deployment dry run: passed (41 static assets; Worker gzip ~11 KiB). No deployment was made.
+- Local Workers runtime: page and manifest returned 200; API correctly returned 503 with no runtime credentials.
+- Static export includes the original GIFs, PWA icons/manifest/service worker/offline page and excludes server configuration.
+- Git ignore checks: local secrets and build output are excluded.
+- Real Cloudflare Access credentials were not read or used. Authenticated production end-to-end validation remains to be done after the user creates the Website Access application and configures the runtime secrets.

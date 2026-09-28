@@ -1,0 +1,4 @@
+# Wrangler's official bundler and local Workers runtime need postinstall setup.
+allowBuilds:
+  esbuild@0.28.1: true
+  workerd@1.20260926.1: true

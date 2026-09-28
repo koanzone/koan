@@ -1,6 +1,11 @@
 export type StreamEvent = { type: string; text?: string; state?: string; expression?: string; message?: string };
 export async function consume(response: Response, receive: (event: StreamEvent) => void) {
- if (!response.ok) throw new Error(response.status === 409 ? 'The guide is finishing another response. Try again shortly.' : 'Cannot reach the guide. Check that the local backend is running.');
+ if (!response.ok) {
+  if (response.status === 409) throw new Error('The guide is finishing another response. Try again shortly.');
+  if (response.status === 401) throw new Error('Your sign-in expired. Reload the page to sign in again.');
+  if (response.status === 503) throw new Error('The website connection is not configured yet.');
+  throw new Error('Cannot reach the guide. Check that the backend and tunnel are running.');
+ }
  if (!response.body) throw new Error('This browser did not provide a response stream.');
  const reader = response.body.getReader();
  const decoder = new TextDecoder();

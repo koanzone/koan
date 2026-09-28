@@ -45,3 +45,9 @@ Input focus maps idle to attention; submit maps to thinking; first visible delta
 Request history is limited to 200 messages / 120,000 characters, each message to 12,000 characters. MLX trims oldest pairs to a token budget before generation. This draft is local and single-user; it is not hardened as a public multi-user service. There is no durable session recovery. The client has a five-minute timeout with retry; slow first model downloads may require retry after loading finishes. No voice, notifications, accounts, profiles, gamification, or settings panel.
 
 Implementation references: [MLX-LM](https://github.com/ml-explore/mlx-lm), [Next.js PWA guide](https://nextjs.org/docs/app/guides/progressive-web-apps).
+
+## Cloudflare deployment
+
+The local architecture above remains available. For hosting, a separate Next.js static export is served by Cloudflare Workers assets. A Worker handles only `/api/health` and `/api/chat`, validates the website visitor's Cloudflare Access JWT against the configured issuer/audience, and adds the API application's service-token credentials to the outbound request. It forwards SSE bodies without buffering and never sends those credentials to the browser. Only the two explicit API paths are allowed; request size, method, content type, origin, and upstream content type are checked. Redirects are not followed. Cookies and user-supplied credentials are not forwarded.
+
+The frontend hostname uses a separate Access application from the API hostname. This deployment is intended for you and invited testers. Static export avoids a framework adapter for the current client-rendered page; adopting server-side Next.js features later would require revisiting this deployment choice. See CLOUDFLARE.md.

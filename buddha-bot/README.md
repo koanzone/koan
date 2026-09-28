@@ -2,6 +2,10 @@
 
 A small local draft: language above, presence below. Next.js/React + FastAPI + a swappable MLX-LM backend. The five original GIFs from the project conversation are included, unchanged. No accounts, database, analytics, persistent transcript, or RAG implementation.
 
+## Host with Cloudflare and GitHub
+
+See [CLOUDFLARE.md](CLOUDFLARE.md) for deployment at **buddha.koanzone.net**, with the existing API tunnel and private runtime credentials. The root website at koanzone.net remains separate.
+
 ## Start locally on macOS
 
 Prerequisites: Node.js 20.9+ (22 LTS recommended), npm, and Python 3.11+. MLX additionally requires Apple silicon and a compatible macOS version. Two terminals are needed; run commands from this repository.

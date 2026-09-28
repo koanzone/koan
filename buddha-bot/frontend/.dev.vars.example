@@ -1,0 +1,8 @@
+# Optional local Worker preview only. Copy to .dev.vars (gitignored).
+# Never put real secrets in this example or a NEXT_PUBLIC_* variable.
+CF_ACCESS_CLIENT_ID=replace-with-service-token-client-id
+CF_ACCESS_CLIENT_SECRET=replace-with-service-token-secret
+# Team domain, without https://; this is NOT api.koanzone.net.
+CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+# Audience tag of the WEBSITE Access application, not Buddha Bot API.
+CF_ACCESS_AUD=replace-with-website-application-audience
