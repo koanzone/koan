@@ -89,3 +89,27 @@ test('health JSON and busy responses retain their status', async()=>{
  const busy=await worker(async()=>Response.json({detail:'busy'},{status:409})).fetch(req(),env);
  assert.equal(busy.status,409);
 });
+
+
+test('public mode accepts anonymous chat but preserves private backend credentials', async()=>{
+ const publicEnv={...env,PUBLIC_SITE:'true',CF_ACCESS_TEAM_DOMAIN:undefined,CF_ACCESS_AUD:undefined};
+ let calls=0;
+ const w=createWorker({authenticate:()=>assert.fail('public site must not require visitor login'),fetchBackend:async(url,init)=>{
+  calls++;
+  assert.equal(init.headers.get('CF-Access-Client-Id'),'test-client');
+  assert.equal(init.headers.get('CF-Access-Client-Secret'),'test-secret');
+  assert.equal(init.headers.get('Cookie'),null);
+  assert.equal(init.headers.get('Cf-Access-Jwt-Assertion'),null);
+  return new Response('data: {"type":"done"}\n\n',{headers:{'Content-Type':'text/event-stream'}});
+ }});
+ assert.equal((await w.fetch(req('/api/chat',{'CF-Access-Client-Secret':'spoofed',Cookie:'visitor'}),publicEnv)).status,200);
+ assert.equal((await w.fetch(req(),{...publicEnv,CF_ACCESS_CLIENT_SECRET:''})).status,503);
+ assert.equal((await w.fetch(req('/api/chat',{Origin:'https://other.example'}),publicEnv)).status,403);
+ assert.equal(calls,1);
+});
+test('public access requires explicit true configuration', async()=>{
+ const w=createWorker({fetchBackend:()=>assert.fail('must require login')});
+ for(const value of [undefined,'false','TRUE','']) {
+  assert.equal((await w.fetch(req(),{...env,PUBLIC_SITE:value})).status,401);
+ }
+});

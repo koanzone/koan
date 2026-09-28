@@ -39,17 +39,23 @@ export function createWorker({fetchBackend = fetch, authenticate = verifyAccess}
       if (request.method !== method) return error(405, 'Method not allowed');
       const origin = request.headers.get('Origin');
       if (origin && origin !== url.origin) return error(403, 'Cross-origin requests are not allowed');
-      if (![env.CF_ACCESS_CLIENT_ID, env.CF_ACCESS_CLIENT_SECRET, env.CF_ACCESS_TEAM_DOMAIN, env.CF_ACCESS_AUD].every(Boolean)) {
+      const publicSite = env.PUBLIC_SITE === 'true';
+      const required = [env.CF_ACCESS_CLIENT_ID, env.CF_ACCESS_CLIENT_SECRET];
+      if (!publicSite) required.push(env.CF_ACCESS_TEAM_DOMAIN, env.CF_ACCESS_AUD);
+      if (!required.every(Boolean)) {
         return error(503, 'Website connection is not configured yet');
       }
       let backend;
       try {
         backend = new URL(env.BACKEND_URL);
         if (backend.protocol !== 'https:' || backend.username || backend.password || backend.pathname !== '/' || backend.search || backend.hash) throw new Error();
-        accessIssuer(env.CF_ACCESS_TEAM_DOMAIN);
+        if (!publicSite) accessIssuer(env.CF_ACCESS_TEAM_DOMAIN);
       } catch { return error(503, 'Website connection configuration is invalid'); }
-      try { await authenticate(request, env); }
-      catch { return error(401, 'Please reload the page and sign in again'); }
+      // Public mode opens the website, while upstream service authentication remains required.
+      if (!publicSite) {
+        try { await authenticate(request, env); }
+        catch { return error(401, 'Please reload the page and sign in again'); }
+      }
       let body;
       if (method === 'POST') {
         if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') return error(415, 'JSON is required');
