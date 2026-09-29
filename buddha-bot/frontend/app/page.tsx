@@ -1,10 +1,16 @@
 "use client";
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { consume } from '../lib/stream';
 import { transition } from '../lib/machine';
 import { chooseOpening } from '../lib/openings';
+import IntroVideo from './IntroVideo';
 type Message = {role: 'user' | 'assistant'; content: string};
 export default function Home() {
+ const [introFinished, setIntroFinished] = useState(false);
+ const finishIntro = useCallback(() => setIntroFinished(true), []);
+ return introFinished ? <Chat /> : <IntroVideo onComplete={finishIntro} />;
+}
+function Chat() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [draft, setDraft] = useState('');
  const [musicPlaying, setMusicPlaying] = useState(false), [musicStarting, setMusicStarting] = useState(false);
