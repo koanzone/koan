@@ -87,7 +87,7 @@ function Chat() {
  }
  return <main className="app">
   <section className="conversation" aria-label="Conversation">
-   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span><button type="button" className="music-toggle" onClick={toggleMusic} disabled={musicStarting} aria-pressed={musicPlaying} aria-label={musicPlaying ? 'Banish Music' : 'Summon Music'} title="Full Blossom of the Evening — r beny">{musicPlaying ? 'Banish Music' : 'Summon Music'}</button></header>
+   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span><button type="button" className="music-toggle" onClick={toggleMusic} disabled={musicStarting} aria-pressed={musicPlaying} aria-label={musicPlaying ? 'BANISH MUSIC' : 'SUMMON MUSIC'} title="Full Blossom of the Evening — r beny">{musicPlaying ? 'BANISH MUSIC' : 'SUMMON MUSIC'}</button></header>
    <div className="transcript" ref={scroll} role="log" aria-label="Messages" aria-live="off" aria-busy={busy}>
     <div className="message-column">
      {messages.map((message,i) => message.content && <article key={i} className={`message ${message.role}`}><span className="speaker">{message.role === 'user' ? 'YOU' : 'ECHO'}</span><p>{message.content}</p></article>)}
