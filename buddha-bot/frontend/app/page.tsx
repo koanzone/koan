@@ -7,6 +7,9 @@ type Message = {role: 'user' | 'assistant'; content: string};
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [draft, setDraft] = useState('');
+ const [musicPlaying, setMusicPlaying] = useState(false), [musicStarting, setMusicStarting] = useState(false);
+ const [audioError, setAudioError] = useState('');
+ const music = useRef<HTMLAudioElement>(null), bell = useRef<HTMLAudioElement>(null);
  const [state, dispatch] = useReducer(transition, 'idle');
  const [busy, setBusy] = useState(false), [ready, setReady] = useState(false);
  const [error, setError] = useState(''), [notice, setNotice] = useState('');
@@ -15,6 +18,9 @@ export default function Home() {
  const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null);
  const inFlight = useRef(false), reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
  useEffect(() => {
+  const musicElement = music.current, bellElement = bell.current;
+  if (musicElement) musicElement.volume = 0.4;
+  if (bellElement) bellElement.volume = 0.6;
   const timer = setTimeout(() => {setMessages([{role:'assistant', content:chooseOpening()}]); setReady(true);}, 900);
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const motion = () => setReduced(media.matches); motion(); media.addEventListener('change', motion);
@@ -26,12 +32,26 @@ export default function Home() {
   };
   resize(); viewport?.addEventListener('resize', resize);
   if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') navigator.serviceWorker.register('/sw.js').catch(() => {});
-  return () => {clearTimeout(timer); controller.current?.abort(); if (reactionTimer.current) clearTimeout(reactionTimer.current); media.removeEventListener('change',motion); viewport?.removeEventListener('resize',resize);};
+  return () => {musicElement?.pause(); bellElement?.pause(); clearTimeout(timer); controller.current?.abort(); if (reactionTimer.current) clearTimeout(reactionTimer.current); media.removeEventListener('change',motion); viewport?.removeEventListener('resize',resize);};
  }, []);
  useEffect(() => { if (scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight; }, [messages]);
+ async function toggleMusic() {
+  const audio = music.current;
+  if (!audio || musicStarting) return;
+  setAudioError('');
+  if (!audio.paused) {audio.pause(); return;}
+  setMusicStarting(true);
+  try {await audio.play();}
+  catch {setAudioError('Music could not start. Try summoning it again.');}
+  finally {setMusicStarting(false);}
+ }
  async function send(history: Message[]) {
   if (inFlight.current) return;
   inFlight.current = true;
+  if (bell.current) {
+   bell.current.currentTime = 0;
+   void bell.current.play().catch(() => {});
+  }
   if (reactionTimer.current) clearTimeout(reactionTimer.current);
   setBusy(true); setError(''); setNotice(''); setRetry(null); dispatch({type:'submit'});
   const abort = new AbortController(); controller.current = abort;
@@ -61,7 +81,7 @@ export default function Home() {
  }
  return <main className="app">
   <section className="conversation" aria-label="Conversation">
-   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span></header>
+   <header><span className="brand">BUDDHA BOT<span className="brand-dot">·</span></span><button type="button" className="music-toggle" onClick={toggleMusic} disabled={musicStarting} aria-pressed={musicPlaying} aria-label={musicPlaying ? 'Banish Music' : 'Summon Music'} title="Full Blossom of the Evening — r beny">{musicPlaying ? 'Banish Music' : 'Summon Music'}</button></header>
    <div className="transcript" ref={scroll} role="log" aria-label="Messages" aria-live="off" aria-busy={busy}>
     <div className="message-column">
      {messages.map((message,i) => message.content && <article key={i} className={`message ${message.role}`}><span className="speaker">{message.role === 'user' ? 'YOU' : 'ECHO'}</span><p>{message.content}</p></article>)}
@@ -76,12 +96,15 @@ export default function Home() {
   </section>
    <div className="composer-wrap">
     {error && <div role="alert" className="error">{error} {retry && <><button className="text-button" onClick={() => send(retry)}>Retry</button><button className="text-button" onClick={() => {setMessages(retry.slice(0,-1)); setDraft(retry.at(-1)?.content || ""); setRetry(null); setError("");}}>Edit reply</button></>}</div>}
+    {audioError && <p className="notice" role="status">{audioError}</p>}
     {notice && <p className="notice">{notice}</p>}
     <form onSubmit={e => {e.preventDefault(); const text=draft.trim(); if (!text || busy || !ready) return; setDraft(''); send([...messages.filter(m => m.content), {role:'user',content:text}]);}}>
      <textarea aria-label="Your reply" placeholder={ready ? 'Open your mind...' : 'A moment…'} value={draft} rows={1} maxLength={12000} disabled={busy || !ready || !!retry} onChange={e => setDraft(e.target.value)} onFocus={() => dispatch({type:'focus'})} onBlur={() => dispatch({type:'blur'})} onKeyDown={e => {if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {e.preventDefault();e.currentTarget.form?.requestSubmit();}}}/>
      {busy ? <button type="button" onClick={() => controller.current?.abort()} aria-label="Stop response">■</button> : <button type="submit" disabled={!draft.trim() || !ready || !!retry} aria-label="Send reply">↑</button>}
     </form>
    </div>
+  <audio ref={music} src="/audio/koanloop.mp3" preload="none" loop hidden onPlaying={() => setMusicPlaying(true)} onPause={() => setMusicPlaying(false)} onError={() => {setMusicPlaying(false); setMusicStarting(false); setAudioError('Music could not load. Try summoning it again.');}} />
+  <audio ref={bell} src="/audio/send-bell.wav" preload="auto" hidden />
   <span className="sr-only" role="status">{busy ? 'Echo is considering your reply.' : messages.at(-1)?.role === 'assistant' ? messages.at(-1)?.content : ''}</span>
  </main>;
 }
