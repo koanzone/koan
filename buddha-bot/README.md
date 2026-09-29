@@ -31,7 +31,7 @@ npm run dev
 
 A `pnpm-lock.yaml` is included for reproducible dependency resolution; pnpm users can use `pnpm install --frozen-lockfile` and `pnpm dev` instead.
 
-Open http://localhost:3000. The header says **DEMO · SCRIPTED REPLIES**. The guide appears, asks “Who are you?”, then “Why are you here?” after your first reply. Later demo answers are deliberately fixed fixtures, including one amused reaction, to exercise the complete interface. They are not an intelligence demonstration.
+Open http://localhost:3000. The header says **DEMO · SCRIPTED REPLIES**. Echo appears and randomly asks one of the 60 questions in `frontend/lib/openings.ts`. Your first reply goes straight to the selected backend. Demo answers are deliberately fixed fixtures, including one amused reaction, to exercise the complete interface. They are not an intelligence demonstration.
 
 ## Connect Qwen
 
@@ -51,7 +51,7 @@ BUDDHA_MAX_TOKENS=2048
 BUDDHA_CONTEXT_TOKENS=8192
 ```
 
-Restart the same backend command and reload the page. The model loads lazily on the first response after the opening questions. Its first load may download several GB from Hugging Face; a local model directory works too. Nothing in the demo downloads a model. For QLoRA, set `BUDDHA_ADAPTER` to the **absolute path** of your existing adapter directory and restart. Training is outside this repository. Base and adapted modes use the same generation settings (temperature .6, top-p .95, top-k 20).
+Restart the same backend command and reload the page. The model loads lazily on the first response to the opening question. Its first load may download several GB from Hugging Face; a local model directory works too. Nothing in the demo downloads a model. For QLoRA, set `BUDDHA_ADAPTER` to the **absolute path** of your existing adapter directory and restart. Training is outside this repository. Base and adapted modes use the same generation settings (temperature .6, top-p .95, top-k 20).
 
 The 2,048 output-token budget includes hidden thinking. If the model spends it all reasoning, the UI reports that no visible answer was produced; increase the budget if needed. Old message pairs are dropped from the model prompt to fit the configured context budget; the full session remains on screen. An oversized latest message is rejected, not silently clipped. Use one backend worker; MLX operations are serialized on one dedicated thread.
 

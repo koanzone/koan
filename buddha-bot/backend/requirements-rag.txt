@@ -1,0 +1,2 @@
+-r requirements-mlx.txt
+sentence-transformers>=5,<6

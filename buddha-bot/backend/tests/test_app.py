@@ -30,17 +30,21 @@ class APITests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         return [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
 
-    def test_opening_and_model_handoff(self):
+    def test_first_reply_reaches_model_with_opening_in_history(self):
+        captured=[]
+        class Recording:
+            def stream(self, messages, stop):
+                captured.extend(messages)
+                yield Piece(text='A model response to your first reply.')
         with TestClient(app) as client:
-            history=[{'role':'assistant','content':'Who are you?'},{'role':'user','content':'Jeff'}]
+            app.state.backend=Recording()
+            history=[{'role':'assistant','content':'What is the sound of waiting?'},
+                     {'role':'user','content':'The clock in my kitchen.'}]
             events=self.events(client.post('/api/chat',json={'messages':history}))
-            self.assertEqual(''.join(e.get('text','') for e in events), 'Why are you here?')
-            history += [{'role':'assistant','content':'Why are you here?'},{'role':'user','content':'To look closer.'}]
-            events=self.events(client.post('/api/chat',json={'messages':history}))
-            self.assertTrue(any(e['type']=='expression' for e in events))
+            self.assertEqual(captured[1:], history)
+            self.assertEqual(captured[0]['role'], 'system')
+            self.assertEqual(''.join(e.get('text','') for e in events), 'A model response to your first reply.')
             self.assertEqual(events[-1]['type'],'done')
-            self.assertNotIn('<think>', str(events))
-            self.assertEqual(client.get('/api/health').json()['backend'],'demo')
 
     def test_validation_and_busy(self):
         with TestClient(app) as client:

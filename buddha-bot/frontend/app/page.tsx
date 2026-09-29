@@ -2,8 +2,8 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { consume } from '../lib/stream';
 import { transition } from '../lib/machine';
+import { chooseOpening } from '../lib/openings';
 type Message = {role: 'user' | 'assistant'; content: string};
-const opening: Message = {role: 'assistant', content: 'Who are you?'};
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [draft, setDraft] = useState('');
@@ -15,7 +15,7 @@ export default function Home() {
  const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null);
  const inFlight = useRef(false), reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
  useEffect(() => {
-  const timer = setTimeout(() => {setMessages([opening]); setReady(true);}, 900);
+  const timer = setTimeout(() => {setMessages([{role:'assistant', content:chooseOpening()}]); setReady(true);}, 900);
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const motion = () => setReduced(media.matches); motion(); media.addEventListener('change', motion);
   const viewport = window.visualViewport;
@@ -67,6 +67,13 @@ export default function Home() {
      {messages.map((message,i) => message.content && <article key={i} className={`message ${message.role}`}><span className="speaker">{message.role === 'user' ? 'YOU' : 'ECHO'}</span><p>{message.content}</p></article>)}
     </div>
    </div>
+  </section>
+  <section className={`stage ${state}`} aria-label={`Echo is ${state}`}>
+   <div className="stage-line"/><div className="sprite-frame">
+    {missing ? <div className="placeholder">◯<small>Echo · {state}</small></div> : <img src={reduced ? '/guide/still.png' : `/guide/${state}.gif`} alt="Android contemplative guide in a violet-lit temple" onError={() => setMissing(true)} />}
+   </div>
+   <div className="stage-caption"><span className="presence-dot"/>{state === 'attention' ? 'LISTENING' : state === 'idle' ? 'HERE WITH YOU' : state.toUpperCase()}</div>
+  </section>
    <div className="composer-wrap">
     {error && <div role="alert" className="error">{error} {retry && <><button className="text-button" onClick={() => send(retry)}>Retry</button><button className="text-button" onClick={() => {setMessages(retry.slice(0,-1)); setDraft(retry.at(-1)?.content || ""); setRetry(null); setError("");}}>Edit reply</button></>}</div>}
     {notice && <p className="notice">{notice}</p>}
@@ -75,13 +82,6 @@ export default function Home() {
      {busy ? <button type="button" onClick={() => controller.current?.abort()} aria-label="Stop response">■</button> : <button type="submit" disabled={!draft.trim() || !ready || !!retry} aria-label="Send reply">↑</button>}
     </form>
    </div>
-  </section>
-  <section className={`stage ${state}`} aria-label={`Echo is ${state}`}>
-   <div className="stage-line"/><div className="sprite-frame">
-    {missing ? <div className="placeholder">◯<small>Echo · {state}</small></div> : <img src={reduced ? '/guide/still.png' : `/guide/${state}.gif`} alt="Android contemplative guide in a violet-lit temple" onError={() => setMissing(true)} />}
-   </div>
-   <div className="stage-caption"><span className="presence-dot"/>{state === 'attention' ? 'LISTENING' : state === 'idle' ? 'HERE WITH YOU' : state.toUpperCase()}</div>
-  </section>
   <span className="sr-only" role="status">{busy ? 'Echo is considering your reply.' : messages.at(-1)?.role === 'assistant' ? messages.at(-1)?.content : ''}</span>
  </main>;
 }

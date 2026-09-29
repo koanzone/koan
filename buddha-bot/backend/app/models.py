@@ -37,15 +37,18 @@ class MLXBackend:
     def __init__(self):
         self.model = self.tokenizer = None
 
-    def stream(self, messages, stop):
+    def _load(self):
         # All MLX loading and generation run on the same dedicated worker.
-        from mlx_lm import load, stream_generate
-        from mlx_lm.sample_utils import make_sampler
+        from mlx_lm import load
         if self.model is None:
             self.model, self.tokenizer = load(
                 os.getenv("BUDDHA_MODEL", "mlx-community/Qwen3-8B-4bit"),
                 adapter_path=os.getenv("BUDDHA_ADAPTER") or None,
             )
+    def stream(self, messages, stop):
+        from mlx_lm import stream_generate
+        from mlx_lm.sample_utils import make_sampler
+        self._load()
         if stop.is_set():
             return
         budget = int(os.getenv("BUDDHA_CONTEXT_TOKENS", "8192"))
@@ -81,8 +84,11 @@ class MLXBackend:
 
 def create_backend():
     mode = os.getenv("BUDDHA_BACKEND", "demo")
+    if mode == "rag":
+        from .rag_backend import RAGBackend
+        return RAGBackend()
     if mode == "mlx":
         return MLXBackend()
     if mode == "demo":
         return DemoBackend()
-    raise ValueError("BUDDHA_BACKEND must be demo or mlx")
+    raise ValueError("BUDDHA_BACKEND must be demo, mlx, or rag")

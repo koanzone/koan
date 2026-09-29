@@ -66,29 +66,23 @@ async def chat(body: ChatRequest, request: Request):
         try:
             send("state", state="thinking")
             history = [m.model_dump() for m in body.messages]
-            # Only the two opening moves are scripted. Everything after them
-            # belongs to the model. No doctrinal keyword rules live here.
-            if sum(m["role"] == "user" for m in history) == 1:
-                send("state", state="talking")
-                send("delta", text="Why are you here?")
-            else:
-                context = app.state.retriever.context(history)
-                system = SYSTEM + ("\nVerified reference material:\n" + context if context else "")
-                visible = False
-                for piece in app.state.backend.stream([{"role": "system", "content": system}] + history, stop):
-                    if stop.is_set():
-                        break
-                    if piece.expression == "amused":
-                        send("expression", expression="amused")
-                    if piece.text:
-                        if not visible:
-                            send("state", state="talking")
-                            visible = True
-                        send("delta", text=piece.text)
-                    if piece.truncated:
-                        send("notice", message="The response reached its length limit.")
-                if not visible and not stop.is_set():
-                    send("error", message="No visible answer was produced. Please try again.")
+            context = app.state.retriever.context(history)
+            system = SYSTEM + ("\nVerified reference material:\n" + context if context else "")
+            visible = False
+            for piece in app.state.backend.stream([{"role": "system", "content": system}] + history, stop):
+                if stop.is_set():
+                    break
+                if piece.expression == "amused":
+                    send("expression", expression="amused")
+                if piece.text:
+                    if not visible:
+                        send("state", state="talking")
+                        visible = True
+                    send("delta", text=piece.text)
+                if piece.truncated:
+                    send("notice", message="The response reached its length limit.")
+            if not visible and not stop.is_set():
+                send("error", message="No visible answer was produced. Please try again.")
             send("state", state="idle")
             send("done")
         except Exception:
